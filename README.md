@@ -4,12 +4,6 @@ AtProtoBridge is a lightweight ASP.NET Core service that bridges the [AT Protoco
 
 A working example of displaying the live feed over `wss`/SignalR can be found in [wwwroot/index.html](wwwroot/index.html): it loads the initial snapshot from `GET /feed` and then connects to the `/feedHub` SignalR hub to receive and render new posts (and removals) in real time. It is served automatically when you run the project and open the site's root URL.
 
-[![GitHub License](https://img.shields.io/github/license/blowdart/idunno.Bluesky)](https://github.com/blowdart/idunno.Bluesky/blob/main/LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/blowdart/idunno.Bluesky)](https://github.com/blowdart/idunno.Bluesky/commits/main/)
-[![GitHub Tag](https://img.shields.io/github/v/tag/blowdart/idunno.Bluesky)](https://github.com/blowdart/idunno.Bluesky/tags)
-[![NuGet Version](https://img.shields.io/nuget/vpre/idunno.Bluesky)](https://www.nuget.org/packages/idunno.Bluesky/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/idunno.Bluesky)](https://www.nuget.org/packages/idunno.Bluesky/)
-
 
 ## Overview
 
