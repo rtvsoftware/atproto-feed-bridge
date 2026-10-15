@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtProtoBridge</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: #17212b;
+            background: #f3f5f7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .page {
+            max-width: 48rem;
+            margin: 0 auto;
+            padding: 2rem 1rem 4rem;
+        }
+
+        header {
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.75rem, 5vw, 2.25rem);
+            letter-spacing: -0.04em;
+        }
+
+        .subtitle {
+            margin: 0.35rem 0 1rem;
+            color: #5b6671;
+        }
+
+        #status {
+            display: inline-flex;
+            align-items: center;
+            min-height: 2rem;
+            margin: 0;
+            padding: 0.35rem 0.75rem;
+            border: 1px solid #d6dde3;
+            border-radius: 999px;
+            background: #fff;
+            color: #46515c;
+            font-size: 0.875rem;
+        }
+
+        #status[data-state="connected"] {
+            border-color: #b6dfc4;
+            background: #effaf2;
+            color: #23643a;
+        }
+
+        #status[data-state="error"] {
+            border-color: #f0c4c4;
+            background: #fff4f4;
+            color: #8f2b2b;
+        }
+
+        .post {
+            margin: 1rem 0;
+            padding: 1.25rem;
+            border: 1px solid #e0e5e9;
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 2px 8px rgb(23 33 43 / 4%);
+        }
+
+        .repost-label {
+            margin: 0 0 0.9rem 2.9rem;
+            color: #596875;
+            font-size: 0.85rem;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: #e8edf1;
+            object-fit: cover;
+        }
+
+        .author-details {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .post-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.15rem 0.5rem;
+            color: #65717c;
+            font-size: 0.875rem;
+        }
+
+        .author-name {
+            color: #17212b;
+            font-size: 0.98rem;
+            font-weight: 700;
+        }
+
+        .author-handle {
+            overflow: hidden;
+            color: #65717c;
+            text-overflow: ellipsis;
+        }
+
+        .post-time {
+            margin-top: 0.15rem;
+            color: #77828c;
+            font-size: 0.8rem;
+        }
+
+        .post-text {
+            margin: 1rem 0;
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .media-link,
+        .video-frame {
+            display: block;
+            min-width: 0;
+            overflow: hidden;
+            border-radius: 0.75rem;
+            background: #e8edf1;
+        }
+
+        .media-image {
+            display: block;
+            width: 100%;
+            max-height: 28rem;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+        }
+
+        .video-list {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .video-frame video {
+            display: block;
+            width: 100%;
+            max-height: 32rem;
+            aspect-ratio: 16 / 9;
+            background: #111;
+        }
+
+        .video-open-link {
+            display: inline-block;
+            margin: 0.5rem 0;
+            color: #145ca8;
+        }
+
+        .external-card {
+            display: grid;
+            grid-template-columns: minmax(7rem, 10rem) 1fr;
+            margin-top: 1rem;
+            border: 1px solid #e0e5e9;
+            border-radius: 0.75rem;
+            background: #fff;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .external-card img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            min-height: 7rem;
+            object-fit: cover;
+        }
+
+        .external-card-content {
+            min-width: 0;
+            padding: 0.85rem;
+            color: #17212b;
+        }
+
+        .external-card-title {
+            font-weight: bold;
+            line-height: 1.35;
+        }
+
+        .external-card-url {
+            margin-top: 0.65rem;
+            overflow: hidden;
+            color: #61707c;
+            font-size: 0.8rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .external-card-description {
+            margin: 0.5rem 0 0;
+            color: #596875;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .empty-state {
+            padding: 2rem 1rem;
+            color: #65717c;
+            text-align: center;
+        }
+
+        @media (max-width: 34rem) {
+            .page {
+                padding: 1.25rem 0.75rem 3rem;
+            }
+
+            .post {
+                padding: 1rem;
+                border-radius: 0.85rem;
+            }
+
+            .external-card {
+                grid-template-columns: 6rem 1fr;
+            }
+
+            .external-card-description {
+                display: -webkit-box;
+                overflow: hidden;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1>AtProtoBridge</h1>
+            <p class="subtitle">Berichten van de redactie, direct uit Bluesky.</p>
+            <p id="status" data-state="loading" role="status">Feed wordt geladen...</p>
+        </header>
+        <main id="feed" aria-live="polite"></main>
+        <p id="empty" class="empty-state" hidden>Er staan nog geen berichten in de feed.</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.18/hls.min.js"></script>
+    <script>
+        const apiFeed = "/feed";
+        const feedElement = document.getElementById("feed");
+        const emptyElement = document.getElementById("empty");
+        const statusElement = document.getElementById("status");
+        const postElements = new Map();
+        const videoPlayers = new WeakMap();
+
+        function getHttpUrl(value) {
+            if (typeof value !== "string" || !value) {
+                return null;
+            }
+
+            try {
+                const url = new URL(value);
+                return url.protocol === "http:" || url.protocol === "https:"
+                    ? url.href
+                    : null;
+            } catch {
+                return null;
+            }
+        }
+
+        function setStatus(message, state) {
+            statusElement.textContent = message;
+            statusElement.dataset.state = state;
+        }
+
+        function normalizeFeedItem(value) {
+            const post = value?.post ?? value;
+            if (!post || typeof post.uri !== "string") {
+                return null;
+            }
+
+            return {
+                id: value?.id || post.uri,
+                post,
+                repostedBy: value?.repostedBy ?? null,
+                feedTimestamp: value?.feedTimestamp || post.createdAt
+            };
+        }
+
+        function disposeVideos(article) {
+            article.querySelectorAll("video").forEach(video => {
+                videoPlayers.get(video)?.destroy();
+                videoPlayers.delete(video);
+            });
+        }
+
+        function addImageGallery(article, images) {
+            if (!Array.isArray(images) || images.length === 0) {
+                return;
+            }
+
+            const gallery = document.createElement("div");
+            gallery.className = "media-grid";
+
+            images.forEach(item => {
+                const thumbUrl = getHttpUrl(item?.thumbUrl) || getHttpUrl(item?.fullSizeUrl);
+                const fullSizeUrl = getHttpUrl(item?.fullSizeUrl) || thumbUrl;
+                if (!thumbUrl || !fullSizeUrl) {
+                    return;
+                }
+
+                const link = document.createElement("a");
+                link.className = "media-link";
+                link.href = fullSizeUrl;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+
+                const image = document.createElement("img");
+                image.className = "media-image";
+                image.src = thumbUrl;
+                image.alt = item.alt || "Afbeelding bij bericht";
+                image.loading = "lazy";
+                link.append(image);
+                gallery.append(link);
+            });
+
+            if (gallery.childElementCount > 0) {
+                article.append(gallery);
+            }
+        }
+
+        function attachVideo(video, playlistUrl, fallbackLink) {
+            if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                video.src = playlistUrl;
+                return;
+            }
+
+            if (window.Hls && Hls.isSupported()) {
+                const player = new Hls();
+                player.loadSource(playlistUrl);
+                player.attachMedia(video);
+                videoPlayers.set(video, player);
+                return;
+            }
+
+            video.hidden = true;
+            fallbackLink.hidden = false;
+        }
+
+        function addVideos(article, videos) {
+            if (!Array.isArray(videos) || videos.length === 0) {
+                return;
+            }
+
+            const list = document.createElement("div");
+            list.className = "video-list";
+
+            videos.forEach(item => {
+                const playlistUrl = getHttpUrl(item?.videoUrl);
+                if (!playlistUrl) {
+                    return;
+                }
+
+                const frame = document.createElement("div");
+                frame.className = "video-frame";
+
+                const video = document.createElement("video");
+                video.controls = true;
+                video.preload = "metadata";
+                video.setAttribute("aria-label", item.alt || "Video bij bericht");
+
+                const poster = getHttpUrl(item.thumbUrl);
+                if (poster) {
+                    video.poster = poster;
+                }
+
+                const fallbackLink = document.createElement("a");
+                fallbackLink.className = "video-open-link";
+                fallbackLink.href = playlistUrl;
+                fallbackLink.target = "_blank";
+                fallbackLink.rel = "noopener noreferrer";
+                fallbackLink.textContent = "Video openen";
+                fallbackLink.hidden = true;
+
+                frame.append(video, fallbackLink);
+                list.append(frame);
+                attachVideo(video, playlistUrl, fallbackLink);
+            });
+
+            if (list.childElementCount > 0) {
+                article.append(list);
+            }
+        }
+
+        function addExternalCard(article, external) {
+            const externalUrl = getHttpUrl(external?.uri);
+            if (!externalUrl) {
+                return;
+            }
+
+            const card = document.createElement("a");
+            card.className = "external-card";
+            card.href = externalUrl;
+            card.target = "_blank";
+            card.rel = "noopener noreferrer";
+
+            const thumbUrl = getHttpUrl(external.thumbUrl);
+            if (thumbUrl) {
+                const image = document.createElement("img");
+                image.src = thumbUrl;
+                image.alt = "";
+                image.loading = "lazy";
+                card.append(image);
+            }
+
+            const content = document.createElement("div");
+            content.className = "external-card-content";
+
+            const title = document.createElement("div");
+            title.className = "external-card-title";
+            title.textContent = external.title || externalUrl;
+            content.append(title);
+
+            if (external.description) {
+                const description = document.createElement("p");
+                description.className = "external-card-description";
+                description.textContent = external.description;
+                content.append(description);
+            }
+
+            const url = document.createElement("div");
+            url.className = "external-card-url";
+            url.textContent = externalUrl;
+            content.append(url);
+            card.append(content);
+            article.append(card);
+        }
+
+        function upsertPost(value) {
+            const item = normalizeFeedItem(value);
+            if (!item) {
+                console.warn("Feed-item overgeslagen: onverwacht JSON-formaat.", value);
+                return;
+            }
+
+            const existingElement = postElements.get(item.id);
+            if (existingElement) {
+                disposeVideos(existingElement);
+                existingElement.remove();
+            }
+
+            const post = item.post;
+            const article = document.createElement("article");
+            article.className = "post";
+
+            const timestamp = Date.parse(item.feedTimestamp || post.createdAt);
+            article.dataset.timestamp = Number.isFinite(timestamp) ? String(timestamp) : "0";
+
+            if (item.repostedBy) {
+                const reposter = item.repostedBy.displayName ||
+                    item.repostedBy.handle ||
+                    item.repostedBy.did ||
+                    "Iemand";
+                const repostLabel = document.createElement("p");
+                repostLabel.className = "repost-label";
+                repostLabel.textContent = `${reposter} heeft dit opnieuw geplaatst`;
+                article.append(repostLabel);
+            }
+
+            const header = document.createElement("div");
+            header.className = "post-header";
+
+            const author = post.postedBy ?? {};
+            const avatarUrl = getHttpUrl(author.avatarUrl);
+            if (avatarUrl) {
+                const avatar = document.createElement("img");
+                avatar.className = "avatar";
+                avatar.src = avatarUrl;
+                avatar.alt = "";
+                avatar.loading = "lazy";
+                header.append(avatar);
+            } else {
+                const avatarPlaceholder = document.createElement("div");
+                avatarPlaceholder.className = "avatar";
+                avatarPlaceholder.setAttribute("aria-hidden", "true");
+                header.append(avatarPlaceholder);
+            }
+
+            const authorDetails = document.createElement("div");
+            authorDetails.className = "author-details";
+
+            const metadata = document.createElement("div");
+            metadata.className = "post-meta";
+
+            const authorName = document.createElement("span");
+            authorName.className = "author-name";
+            authorName.textContent = author.displayName || author.handle || "Onbekende auteur";
+            metadata.append(authorName);
+
+            if (author.handle) {
+                const handle = document.createElement("span");
+                handle.className = "author-handle";
+                handle.textContent = `@${author.handle}`;
+                metadata.append(handle);
+            }
+            authorDetails.append(metadata);
+
+            const date = new Date(item.feedTimestamp || post.createdAt);
+            const time = document.createElement("time");
+            time.className = "post-time";
+            if (!Number.isNaN(date.getTime())) {
+                time.dateTime = date.toISOString();
+                time.textContent = new Intl.DateTimeFormat("nl-NL", {
+                    dateStyle: "medium",
+                    timeStyle: "short"
+                }).format(date);
+            } else {
+                time.textContent = "Datum onbekend";
+            }
+            authorDetails.append(time);
+            header.append(authorDetails);
+            article.append(header);
+
+            if (post.text) {
+                const text = document.createElement("p");
+                text.className = "post-text";
+                text.textContent = post.text;
+                article.append(text);
+            }
+
+            addImageGallery(article, post.images);
+            addVideos(article, post.videos);
+            addExternalCard(article, post.external);
+
+            postElements.set(item.id, article);
+
+            const nextPost = Array.from(feedElement.children).find(
+                element => Number(element.dataset.timestamp) < timestamp);
+            feedElement.insertBefore(article, nextPost ?? null);
+            emptyElement.hidden = true;
+        }
+
+        function removePost(uri) {
+            const article = postElements.get(uri);
+            if (article) {
+                disposeVideos(article);
+                article.remove();
+            }
+            postElements.delete(uri);
+            emptyElement.hidden = postElements.size > 0;
+        }
+
+        async function loadLatestPosts() {
+            const response = await fetch(apiFeed);
+            if (!response.ok) {
+                throw new Error(`Feed ophalen mislukt: HTTP ${response.status}`);
+            }
+
+            const posts = await response.json();
+            if (!Array.isArray(posts)) {
+                throw new Error("De feed-response is geen lijst.");
+            }
+            posts.forEach(upsertPost);
+            emptyElement.hidden = postElements.size > 0;
+        }
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/feedHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceivePost", upsertPost);
+        connection.on("RemovePost", removePost);
+        connection.onreconnected(() => setStatus("Live verbonden", "connected"));
+        connection.onclose(() => setStatus("Live verbinding verbroken", "error"));
+
+        async function start() {
+            try {
+                await connection.start();
+                setStatus("Live verbonden", "connected");
+            } catch (error) {
+                setStatus("Live updates niet beschikbaar", "error");
+                console.error("SignalR verbinden is mislukt:", error);
+            }
+
+            try {
+                await loadLatestPosts();
+            } catch (error) {
+                setStatus("De feed kon niet worden geladen", "error");
+                console.error(error);
+            }
+        }
+
+        start();
+    </script>
+</body>
+</html>
