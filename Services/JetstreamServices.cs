@@ -86,10 +86,34 @@ public sealed class JetstreamServices(
                     }
                 }
 
-                var feedPost = new FeedPost(
+                string rootUri = postUri;
+                string? parentUri = null;
+                int threadIndex = 0;
+
+                if (record.TryGetProperty("reply", out var replyProperty))
+                {
+                    if (replyProperty.TryGetProperty("root", out var rootProperty) && 
+                        rootProperty.TryGetProperty("uri", out var rootUriProperty))
+                    {
+                        rootUri = rootUriProperty.GetString() ?? postUri;
+                    }
+
+                    if (replyProperty.TryGetProperty("parent", out var parentProperty) && 
+                        parentProperty.TryGetProperty("uri", out var parentUriProperty))
+                    {
+                        parentUri = parentUriProperty.GetString();
+                    }
+
+                    threadIndex = feedItemStore.GetLatest().Count(item => item.Post.RootUri == rootUri);
+                }
+
+                 var feedPost = new FeedPost(
                     postUri,
                     feedAuthor,
                     text,
+                    rootUri,
+                    parentUri,
+                    threadIndex,
                     createdAt,
                     feedExternal,
                     images,
