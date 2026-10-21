@@ -10,6 +10,7 @@ A working example of displaying the live feed over `wss`/SignalR can be found in
 * Connects to a [Jetstream](https://github.com/bluesky-social/jetstream) instance and subscribes to `app.bsky.feed.post` and `app.bsky.feed.repost` events for a configurable list of account DIDs.
 * On startup, backfills the most recent posts and reposts for those accounts directly from their PDS, so the feed is populated immediately.
 * Resolves author profiles and parses link previews, images and video embeds through the public Bluesky AppView API, with in-memory caching to limit outgoing requests.
+* Tracks reply threads: each post carries its `rootUri`, `parentUri` and a `threadIndex`, so replies can be shown in order after the root post they belong to.
 * Keeps the latest feed items in memory and exposes them through a REST endpoint and a SignalR hub.
 * Intended as a reusable building block for running your own curated Bluesky feed (for a community, organization or region) without having to build a full feed generator or Jetstream consumer from scratch.
 
@@ -58,6 +59,9 @@ GET /feed
         "avatarUrl": "https://..."
       },
       "text": "Hello from Bluesky!",
+      "rootUri": "at://did:plc:example/app.bsky.feed.post/abc123",
+      "parentUri": null,
+      "threadIndex": 0,
       "createdAt": "2026-01-01T12:00:00Z",
       "external": null,
       "images": [],
@@ -68,6 +72,14 @@ GET /feed
   }
 ]
 ```
+
+Each post includes `rootUri`, `parentUri` and `threadIndex`, which together describe its position in a reply thread:
+
+* `rootUri` is the `uri` of the first (root) post of the thread — equal to the post's own `uri` for root posts.
+* `parentUri` is the `uri` of the post it directly replies to, or `null` for root posts.
+* `threadIndex` is `0` for root posts, and `1`, `2`, `3`, ... for subsequent replies on the same `rootUri`, ordered by `createdAt`.
+
+This lets consumers group feed items by `rootUri` and sort them by `threadIndex` to display a thread with the root post first, followed by its replies in the order they were posted.
 
 ### Real-time: SignalR hub `/feedHub`
 
@@ -106,11 +118,6 @@ Only the latest version of the libraries are supported. All bug fixes, including
 Older versions will not receive any updates.
 
 The library is supported on all in-support versions of .NET.
-
-
-## Dependencies
-
-This version takes a dependency on `idunno.AtProto` .
 
 ### External dependencies
 
