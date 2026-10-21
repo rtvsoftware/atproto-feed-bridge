@@ -97,10 +97,32 @@ public sealed class PostServices(
                                             }
                                         }
 
+                                        string rootUri = recordUri;
+                                        string? parentUri = null;
+                                        int threadIndex = 0;
+
+                                        if (record.TryGetProperty("reply", out var replyProperty))
+                                        {
+                                            if (replyProperty.TryGetProperty("root", out var rootProperty) && 
+                                                rootProperty.TryGetProperty("uri", out var rootUriProperty))
+                                            {
+                                                rootUri = rootUriProperty.GetString() ?? recordUri;
+                                            }
+
+                                            if (replyProperty.TryGetProperty("parent", out var parentProperty) && 
+                                                parentProperty.TryGetProperty("uri", out var parentUriProperty))
+                                            {
+                                                parentUri = parentUriProperty.GetString();
+                                            }
+                                        }
+
                                         var feedPost = new FeedPost(
                                            recordUri,
                                            feedAuthor,
                                            text,
+                                           rootUri,
+                                           parentUri,
+                                           threadIndex,
                                            createdAt,
                                            feedExternal,
                                            images,
