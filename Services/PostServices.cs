@@ -133,7 +133,6 @@ public sealed class PostServices(
                                         }
                                     }
                                 }
-
                             }
                         }
                     }
@@ -142,16 +141,11 @@ public sealed class PostServices(
         }
     }
 
-    private FeedItem CreateFeedItem(string postUri, FeedPost post, FeedAuthor? repostedBy, DateTimeOffset feedTimestamp)
-    {
-        return new FeedItem(
+    private FeedItem CreateFeedItem(string postUri, FeedPost post, FeedAuthor? repostedBy, DateTimeOffset feedTimestamp) => 
+        new FeedItem(
             Id: postUri,
             Post: post,
             RepostedBy: repostedBy,
             FeedTimestamp: feedTimestamp
         );
-    }
-
-
-
 }

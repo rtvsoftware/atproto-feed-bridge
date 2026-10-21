@@ -67,11 +67,11 @@ public sealed class JetstreamServices(
                 }
 
                 var feedAuthor = await appViewServices.GetFeedAuthorByDidAsync(did!, CancellationToken.None);
-
-                  var (images, videos) = MediaEmbedParser.Parse(
-                                            record,
-                                            default,
-                                            did.ToString());
+               
+                var (images, videos) = MediaEmbedParser.Parse(
+                                        record,
+                                        default,
+                                        did.ToString());
 
                 if (videos.Length == 0 &&
                     MediaEmbedParser.ContainsVideo(record))
